@@ -1,99 +1,219 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Fast Video Downloader</title>
+    <title>Fast Video Saver - Download YouTube, Instagram, Pinterest Videos</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
         body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 50px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
         }
         .container {
             background: white;
             border-radius: 20px;
             padding: 40px;
-            max-width: 500px;
-            margin: auto;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            max-width: 550px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
         }
-        h1 { color: #333; margin-bottom: 10px; }
-        p { color: #666; margin-bottom: 30px; }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+            text-align: center;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .platform-badges {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .badge {
+            background: #f0f0f0;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .badge.youtube { background: #ff0000; color: white; }
+        .badge.instagram { background: #e4405f; color: white; }
+        .badge.pinterest { background: #bd081c; color: white; }
         input {
             width: 100%;
             padding: 15px;
-            margin: 10px 0;
             border: 2px solid #ddd;
             border-radius: 10px;
             font-size: 16px;
-            box-sizing: border-box;
+            margin-bottom: 15px;
+        }
+        input:focus {
+            outline: none;
+            border-color: #667eea;
         }
         button {
-            background: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 15px 30px;
             border: none;
+            padding: 15px;
+            font-size: 18px;
             border-radius: 10px;
-            font-size: 16px;
             cursor: pointer;
             width: 100%;
             font-weight: bold;
         }
-        button:hover { background: #764ba2; }
+        button:hover {
+            transform: translateY(-2px);
+        }
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
         .result {
             margin-top: 20px;
             padding: 15px;
             border-radius: 10px;
             display: none;
         }
-        .success { background: #d4edda; color: #155724; display: block; }
-        .error { background: #f8d7da; color: #721c24; display: block; }
-        .loading { background: #d1ecf1; color: #0c5460; display: block; }
-        a { color: #667eea; text-decoration: none; font-weight: bold; }
+        .result.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+        .result.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+        .result.loading {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+            display: block;
+        }
+        .download-link {
+            margin-top: 10px;
+            word-break: break-all;
+        }
+        .download-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .features {
+            margin-top: 30px;
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .feature {
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+        }
+        hr {
+            margin: 20px 0;
+            border: none;
+            border-top: 1px solid #eee;
+        }
+        .note {
+            font-size: 12px;
+            color: #999;
+            text-align: center;
+            margin-top: 15px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🚀 Fast Video Downloader</h1>
-        <p>100% Free - YouTube Videos Only</p>
+        <h1>🚀 Fast Video Saver</h1>
+        <p class="subtitle">100% Free & Unlimited</p>
         
-        <input type="text" id="urlInput" placeholder="Paste YouTube URL here...">
-        <button onclick="downloadVideo()">Download Video</button>
+        <div class="platform-badges">
+            <span class="badge youtube">YouTube</span>
+            <span class="badge instagram">Instagram</span>
+            <span class="badge pinterest">Pinterest</span>
+        </div>
+        
+        <input type="text" id="videoUrl" placeholder="Paste any video URL (YouTube, Instagram, Pinterest)">
+        <button id="downloadBtn" onclick="downloadVideo()">Download Video</button>
         
         <div id="result" class="result"></div>
+        
+        <div class="features">
+            <div class="feature">⚡ Lightning Fast</div>
+            <div class="feature">🔒 100% Secure</div>
+            <div class="feature">💯 Always Free</div>
+            <div class="feature">📱 No Signup</div>
+        </div>
+        
+        <div class="note">
+            💡 Note: Instagram downloads may work as images. For best results, use YouTube or Pinterest.
+        </div>
     </div>
 
     <script>
         async function downloadVideo() {
-            const url = document.getElementById('urlInput').value;
+            const urlInput = document.getElementById('videoUrl');
+            const url = urlInput.value.trim();
             const resultDiv = document.getElementById('result');
+            const downloadBtn = document.getElementById('downloadBtn');
+            
+            resultDiv.className = 'result';
+            resultDiv.style.display = 'none';
             
             if (!url) {
-                showResult('Please enter a URL', 'error');
+                showResult('Please enter a video URL', 'error');
                 return;
             }
             
-            showResult('Processing... ⏳', 'loading');
+            showResult('Processing your video... ⏳', 'loading');
+            downloadBtn.disabled = true;
             
             try {
                 const response = await fetch('/api/download', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
                     body: JSON.stringify({ url: url })
                 });
                 
                 const data = await response.json();
+                console.log('Response:', data);
                 
                 if (data.success && data.videoUrl) {
-                    showResult(`✅ Success! <br><a href="${data.videoUrl}" target="_blank">Click here to download</a>`, 'success');
+                    let message = `✅ ${data.platform || 'Video'} found!<br>`;
+                    if (data.message) message += `${data.message}<br>`;
+                    message += `<div class="download-link">📥 <a href="${data.videoUrl}" target="_blank">Click here to download</a></div>`;
+                    showResult(message, 'success');
                     window.open(data.videoUrl, '_blank');
                 } else {
-                    showResult(`❌ Failed: ${data.error || 'Unknown error'}`, 'error');
+                    showResult(`❌ Failed: ${data.error || 'Could not download video'}`, 'error');
                 }
+                
             } catch (error) {
-                showResult(`❌ Error: ${error.message}`, 'error');
+                console.error('Download error:', error);
+                showResult(`❌ Error: ${error.message || 'Failed to connect to server'}`, 'error');
+            } finally {
+                downloadBtn.disabled = false;
             }
         }
         
@@ -101,10 +221,14 @@
             const resultDiv = document.getElementById('result');
             resultDiv.innerHTML = message;
             resultDiv.className = `result ${type}`;
+            resultDiv.style.display = 'block';
         }
         
-        document.getElementById('urlInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') downloadVideo();
+        // Enter key support
+        document.getElementById('videoUrl').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                downloadVideo();
+            }
         });
     </script>
 </body>
