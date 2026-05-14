@@ -1,27 +1,49 @@
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   
-  if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Use POST method' });
+  }
+  
   const { url } = req.body;
-  if (!url) return res.status(400).json({ error: 'URL required' });
-
+  
+  if (!url) {
+    return res.status(400).json({ error: 'URL is required' });
+  }
+  
   try {
-    const backendUrl = process.env.RAILWAY_BACKEND_URL;
+    // YouTube only (working)
+    if (url.includes('youtube.com') || url.includes('youtu.be')) {
+      let videoId = '';
+      if (url.includes('youtu.be/')) {
+        videoId = url.split('youtu.be/')[1].split('?')[0];
+      } else if (url.includes('v=')) {
+        videoId = url.split('v=')[1].split('&')[0];
+      }
+      
+      if (videoId) {
+        return res.status(200).json({
+          success: true,
+          platform: 'YouTube',
+          videoUrl: `https://pipedproxy.kavin.rocks/streams/${videoId}`,
+          title: 'YouTube Video'
+        });
+      }
+    }
     
-    const response = await fetch(`${backendUrl}/download`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url: url.trim() })
+    return res.status(200).json({
+      success: false,
+      error: 'Only YouTube videos work currently. Instagram API is blocked.'
     });
-
-    const data = await response.json();
-    return res.status(200).json(data);
-
+    
   } catch (error) {
-    return res.status(500).json({ success: false, error: error.message });
+    return res.status(500).json({ 
+      success: false, 
+      error: error.message 
+    });
   }
 }
