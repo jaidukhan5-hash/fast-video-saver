@@ -22,7 +22,7 @@
             background: white;
             border-radius: 20px;
             padding: 40px;
-            max-width: 550px;
+            max-width: 600px;
             width: 100%;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
         }
@@ -42,17 +42,17 @@
             justify-content: center;
             gap: 15px;
             margin-bottom: 30px;
+            flex-wrap: wrap;
         }
         .badge {
-            background: #f0f0f0;
-            padding: 5px 15px;
-            border-radius: 20px;
+            padding: 8px 20px;
+            border-radius: 30px;
             font-size: 14px;
             font-weight: bold;
         }
-        .badge.youtube { background: #ff0000; color: white; }
-        .badge.instagram { background: #e4405f; color: white; }
-        .badge.pinterest { background: #bd081c; color: white; }
+        .badge.youtube { background: #FF0000; color: white; }
+        .badge.instagram { background: #E4405F; color: white; }
+        .badge.pinterest { background: #BD081C; color: white; }
         input {
             width: 100%;
             padding: 15px;
@@ -60,6 +60,7 @@
             border-radius: 10px;
             font-size: 16px;
             margin-bottom: 15px;
+            transition: border-color 0.3s;
         }
         input:focus {
             outline: none;
@@ -71,10 +72,11 @@
             border: none;
             padding: 15px;
             font-size: 18px;
+            font-weight: bold;
             border-radius: 10px;
             cursor: pointer;
             width: 100%;
-            font-weight: bold;
+            transition: transform 0.2s;
         }
         button:hover {
             transform: translateY(-2px);
@@ -115,17 +117,18 @@
             color: #667eea;
             text-decoration: none;
             font-weight: bold;
+            font-size: 16px;
         }
         .features {
             margin-top: 30px;
             display: flex;
             justify-content: space-around;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 15px;
         }
         .feature {
             text-align: center;
-            font-size: 12px;
+            font-size: 13px;
             color: #666;
         }
         hr {
@@ -147,12 +150,12 @@
         <p class="subtitle">100% Free & Unlimited</p>
         
         <div class="platform-badges">
-            <span class="badge youtube">YouTube</span>
-            <span class="badge instagram">Instagram</span>
-            <span class="badge pinterest">Pinterest</span>
+            <span class="badge youtube">▶️ YouTube</span>
+            <span class="badge instagram">📸 Instagram</span>
+            <span class="badge pinterest">📌 Pinterest</span>
         </div>
         
-        <input type="text" id="videoUrl" placeholder="Paste any video URL (YouTube, Instagram, Pinterest)">
+        <input type="text" id="videoUrl" placeholder="Paste video URL from YouTube, Instagram, or Pinterest">
         <button id="downloadBtn" onclick="downloadVideo()">Download Video</button>
         
         <div id="result" class="result"></div>
@@ -165,7 +168,7 @@
         </div>
         
         <div class="note">
-            💡 Note: Instagram downloads may work as images. For best results, use YouTube or Pinterest.
+            💡 <strong>How to use:</strong> Paste any video link → Click Download → Open the link → Save video
         </div>
     </div>
 
@@ -180,11 +183,11 @@
             resultDiv.style.display = 'none';
             
             if (!url) {
-                showResult('Please enter a video URL', 'error');
+                showResult('❌ Please enter a video URL', 'error');
                 return;
             }
             
-            showResult('Processing your video... ⏳', 'loading');
+            showResult('⏳ Processing your video...', 'loading');
             downloadBtn.disabled = true;
             
             try {
@@ -200,18 +203,35 @@
                 console.log('Response:', data);
                 
                 if (data.success && data.videoUrl) {
-                    let message = `✅ ${data.platform || 'Video'} found!<br>`;
+                    let platformIcon = '';
+                    if (data.platform === 'YouTube') platformIcon = '▶️';
+                    else if (data.platform === 'Instagram') platformIcon = '📸';
+                    else if (data.platform === 'Pinterest') platformIcon = '📌';
+                    
+                    let message = `${platformIcon} <strong>${data.platform}</strong> video found!<br>`;
                     if (data.message) message += `${data.message}<br>`;
-                    message += `<div class="download-link">📥 <a href="${data.videoUrl}" target="_blank">Click here to download</a></div>`;
+                    message += `<div class="download-link">📥 <a href="${data.videoUrl}" target="_blank">Click Here to Download</a></div>`;
+                    
+                    if (data.alternativeLinks) {
+                        message += `<hr><small>Alternative links:</small><br>`;
+                        data.alternativeLinks.forEach((link, i) => {
+                            message += `<small><a href="${link}" target="_blank">Option ${i+1}</a> | </small>`;
+                        });
+                    }
+                    
                     showResult(message, 'success');
-                    window.open(data.videoUrl, '_blank');
+                    
+                    // Auto open in new tab
+                    setTimeout(() => {
+                        window.open(data.videoUrl, '_blank');
+                    }, 500);
                 } else {
-                    showResult(`❌ Failed: ${data.error || 'Could not download video'}`, 'error');
+                    showResult(`❌ ${data.error || 'Could not download video'}`, 'error');
                 }
                 
             } catch (error) {
                 console.error('Download error:', error);
-                showResult(`❌ Error: ${error.message || 'Failed to connect to server'}`, 'error');
+                showResult(`❌ Connection error: ${error.message}`, 'error');
             } finally {
                 downloadBtn.disabled = false;
             }
