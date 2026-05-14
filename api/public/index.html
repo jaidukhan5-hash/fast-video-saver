@@ -1,262 +1,66 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Fast Video Saver - Instagram | Pinterest | YouTube</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-        .container {
-            background: white;
-            border-radius: 24px;
-            padding: 40px;
-            max-width: 550px;
-            width: 100%;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        }
-        h1 {
-            font-size: 28px;
-            text-align: center;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 10px;
-        }
-        .subtitle {
-            text-align: center;
-            color: #666;
-            margin-bottom: 25px;
-        }
-        .badges {
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-        }
-        .badge {
-            padding: 8px 20px;
-            border-radius: 40px;
-            font-weight: bold;
-            font-size: 14px;
-        }
-        .badge.ig {
-            background: linear-gradient(135deg, #833AB4, #FD1D1D, #FCAF45);
-            color: white;
-        }
-        .badge.pt {
-            background: #BD081C;
-            color: white;
-        }
-        .badge.yt {
-            background: #FF0000;
-            color: white;
-        }
-        input {
-            width: 100%;
-            padding: 16px;
-            border: 2px solid #e0e0e0;
-            border-radius: 12px;
-            font-size: 16px;
-            margin-bottom: 15px;
-            transition: all 0.3s;
-        }
-        input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-        button {
-            width: 100%;
-            padding: 16px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-        button:hover {
-            transform: translateY(-2px);
-        }
-        button:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-        .result {
-            margin-top: 20px;
-            padding: 16px;
-            border-radius: 12px;
-            display: none;
-        }
-        .result.success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-            display: block;
-        }
-        .result.error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-            display: block;
-        }
-        .result.loading {
-            background: #d1ecf1;
-            color: #0c5460;
-            border: 1px solid #bee5eb;
-            display: block;
-        }
-        .download-link {
-            margin-top: 12px;
-        }
-        .download-link a {
-            color: #667eea;
-            text-decoration: none;
-            font-weight: bold;
-            font-size: 16px;
-            word-break: break-all;
-        }
-        .alt-links {
-            margin-top: 10px;
-            font-size: 12px;
-        }
-        .features {
-            display: flex;
-            justify-content: space-around;
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        .feature {
-            text-align: center;
-            font-size: 12px;
-            color: #888;
-        }
-        .note {
-            text-align: center;
-            font-size: 11px;
-            color: #aaa;
-            margin-top: 15px;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>🚀 Fast Video Saver</h1>
-        <p class="subtitle">Download Videos from Any Platform</p>
-        
-        <div class="badges">
-            <span class="badge ig">📸 Instagram</span>
-            <span class="badge pt">📌 Pinterest</span>
-            <span class="badge yt">▶️ YouTube</span>
-        </div>
-        
-        <input type="text" id="videoUrl" placeholder="Paste video link (Instagram Reel / Pinterest / YouTube)">
-        <button id="downloadBtn" onclick="downloadVideo()">Download Video</button>
-        
-        <div id="result" class="result"></div>
-        
-        <div class="features">
-            <div class="feature">⚡ Lightning Fast</div>
-            <div class="feature">🔒 100% Secure</div>
-            <div class="feature">💯 Always Free</div>
-            <div class="feature">📱 No Signup</div>
-        </div>
-        
-        <div class="note">
-            💡 <strong>Instagram:</strong> Click link → Click "Download" on next page<br>
-            📌 <strong>Pinterest:</strong> Direct video link or download page<br>
-            ▶️ <strong>YouTube:</strong> Direct download
-        </div>
-    </div>
-
-    <script>
-        async function downloadVideo() {
-            const urlInput = document.getElementById('videoUrl');
-            const url = urlInput.value.trim();
-            const resultDiv = document.getElementById('result');
-            const downloadBtn = document.getElementById('downloadBtn');
-            
-            resultDiv.className = 'result';
-            resultDiv.style.display = 'none';
-            
-            if (!url) {
-                showResult('❌ Please paste a video URL', 'error');
-                return;
-            }
-            
-            showResult('⏳ Processing your video...', 'loading');
-            downloadBtn.disabled = true;
-            
-            try {
-                const response = await fetch('/api/download', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ url: url })
-                });
-                
-                const data = await response.json();
-                console.log('Response:', data);
-                
-                if (data.success && data.videoUrl) {
-                    let icon = '';
-                    if (data.platform === 'Instagram') icon = '📸';
-                    else if (data.platform === 'Pinterest') icon = '📌';
-                    else if (data.platform === 'YouTube') icon = '▶️';
-                    
-                    let message = `${icon} <strong>${data.platform}</strong> video ready!<br>`;
-                    if (data.message) message += `${data.message}<br>`;
-                    message += `<div class="download-link">📥 <a href="${data.videoUrl}" target="_blank">Click Here to Download</a></div>`;
-                    
-                    if (data.altLinks) {
-                        message += `<div class="alt-links">🔄 Alternative: <a href="${data.altLinks[0]}" target="_blank">Try another service</a></div>`;
-                    }
-                    
-                    showResult(message, 'success');
-                    
-                    // Auto open in new tab after 1 second
-                    setTimeout(() => {
-                        window.open(data.videoUrl, '_blank');
-                    }, 1000);
-                } else {
-                    showResult(`❌ ${data.error || 'Could not download video'}`, 'error');
-                }
-                
-            } catch (error) {
-                console.error('Error:', error);
-                showResult(`❌ Connection error: ${error.message}`, 'error');
-            } finally {
-                downloadBtn.disabled = false;
-            }
-        }
-        
-        function showResult(message, type) {
-            const resultDiv = document.getElementById('result');
-            resultDiv.innerHTML = message;
-            resultDiv.className = `result ${type}`;
-        }
-        
-        // Enter key support
-        document.getElementById('videoUrl').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') downloadVideo();
-        });
-    </script>
-</body>
-</html>
+export default async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'POST method chahiye' });
+  }
+  
+  const { url } = req.body;
+  
+  if (!url) {
+    return res.status(400).json({ error: 'URL dalo bhai' });
+  }
+  
+  // YouTube
+  if (url.includes('youtube') || url.includes('youtu.be')) {
+    let videoId = '';
+    if (url.includes('youtu.be/')) {
+      videoId = url.split('youtu.be/')[1].split('?')[0];
+    } else if (url.includes('v=')) {
+      videoId = url.split('v=')[1].split('&')[0];
+    }
+    
+    if (videoId) {
+      return res.status(200).json({
+        success: true,
+        platform: 'YouTube',
+        videoUrl: `https://inv.riverside.rocks/api/v1/videos/${videoId}`,
+        message: 'Click below to download'
+      });
+    }
+  }
+  
+  // Instagram - Direct working service
+  if (url.includes('instagram')) {
+    let shortcode = '';
+    if (url.includes('/reel/')) {
+      shortcode = url.split('/reel/')[1].split('/')[0].split('?')[0];
+    } else if (url.includes('/p/')) {
+      shortcode = url.split('/p/')[1].split('/')[0].split('?')[0];
+    }
+    
+    if (shortcode) {
+      return res.status(200).json({
+        success: true,
+        platform: 'Instagram',
+        videoUrl: `https://instasave.io/download?url=https://instagram.com/p/${shortcode}/`,
+        message: 'Link open karo, phir Download button dabao'
+      });
+    }
+  }
+  
+  // Pinterest
+  if (url.includes('pinterest')) {
+    return res.status(200).json({
+      success: true,
+      platform: 'Pinterest',
+      videoUrl: `https://pinterestvideodownloader.com/download?url=${encodeURIComponent(url)}`,
+      message: 'Link open karo, phir Download button dabao'
+    });
+  }
+  
+  return res.status(200).json({
+    success: false,
+    error: 'YouTube, Instagram, ya Pinterest link daalo'
+  });
+}
