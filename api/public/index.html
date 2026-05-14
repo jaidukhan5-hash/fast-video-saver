@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fast Video Saver - Download Videos Free</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            margin-bottom: 15px;
+            transition: border-color 0.3s;
+        }
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+        }
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            display: none;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+        .status.loading {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+            display: block;
+        }
+        .features {
+            margin-top: 30px;
+            display: flex;
+            justify-content: space-around;
+            color: #666;
+            font-size: 14px;
+        }
+        .feature {
+            text-align: center;
+        }
+        .download-link {
+            margin-top: 15px;
+            word-break: break-all;
+        }
+        .download-link a {
+            color: #667eea;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Fast Video Saver</h1>
+        <p class="subtitle">100% Free & Unlimited</p>
+        
+        <input type="text" id="videoUrl" placeholder="Paste video URL here (Instagram, YouTube, Pinterest)">
+        <button id="downloadBtn" onclick="downloadVideo()">Download Video</button>
+        
+        <div id="status" class="status"></div>
+        
+        <div class="features">
+            <div class="feature">⚡ Lightning Fast</div>
+            <div class="feature">🔒 100% Secure</div>
+            <div class="feature">💯 Always Free</div>
+        </div>
+    </div>
+
+    <script>
+        async function downloadVideo() {
+            const urlInput = document.getElementById('videoUrl');
+            const url = urlInput.value.trim();
+            const statusDiv = document.getElementById('status');
+            const downloadBtn = document.getElementById('downloadBtn');
+            
+            // Clear previous status
+            statusDiv.className = 'status';
+            statusDiv.style.display = 'none';
+            
+            // Validate URL
+            if (!url) {
+                showStatus('Please enter a video URL', 'error');
+                return;
+            }
+            
+            if (!url.includes('instagram.com') && !url.includes('youtube.com') && 
+                !url.includes('youtu.be') && !url.includes('pinterest.com') && 
+                !url.includes('pin.it')) {
+                showStatus('Please enter a valid Instagram, YouTube, or Pinterest URL', 'error');
+                return;
+            }
+            
+            // Show loading
+            showStatus('Processing your video... ⏳', 'loading');
+            downloadBtn.disabled = true;
+            
+            try {
+                console.log('Sending request for URL:', url);
+                
+                const response = await fetch('/api/download', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ url: url })
+                });
+                
+                const data = await response.json();
+                console.log('Response:', data);
+                
+                if (data.success && data.videoUrl) {
+                    // Success - provide download link
+                    let message = `✅ ${data.platform || 'Video'} found! (${data.size || 'Size unknown'})<br>`;
+                    message += `<div class="download-link">📥 <a href="${data.videoUrl}" target="_blank" download>Click here to download</a></div>`;
+                    showStatus(message, 'success');
+                    
+                    // Auto open download in new tab
+                    window.open(data.videoUrl, '_blank');
+                } else {
+                    // Error from API
+                    showStatus(`❌ Failed: ${data.error || 'Unknown error'}`, 'error');
+                }
+                
+            } catch (error) {
+                console.error('Download error:', error);
+                showStatus(`❌ Error: ${error.message || 'Failed to download video'}`, 'error');
+            } finally {
+                downloadBtn.disabled = false;
+            }
+        }
+        
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = message;
+            statusDiv.className = `status ${type}`;
+            statusDiv.style.display = 'block';
+        }
+        
+        // Enter key support
+        document.getElementById('videoUrl').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                downloadVideo();
+            }
+        });
+    </script>
+</body>
+</html>
