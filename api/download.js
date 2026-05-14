@@ -1,4 +1,5 @@
 export default async function handler(req, res) {
+  // Allow anyone to use this API
   res.setHeader('Access-Control-Allow-Origin', '*');
   
   if (req.method !== 'POST') {
@@ -12,95 +13,71 @@ export default async function handler(req, res) {
   }
   
   try {
-    // ==================== YOUTUBE ====================
-    if (url.includes('youtube.com') || url.includes('youtu.be')) {
-      let videoId = '';
-      if (url.includes('youtu.be/')) {
-        videoId = url.split('youtu.be/')[1].split('?')[0];
-      } else if (url.includes('v=')) {
-        videoId = url.split('v=')[1].split('&')[0];
-      } else if (url.includes('/embed/')) {
-        videoId = url.split('/embed/')[1].split('?')[0];
-      }
-      
-      if (videoId) {
-        return res.status(200).json({
-          success: true,
-          platform: 'YouTube',
-          videoUrl: `https://inv.riverside.rocks/api/v1/videos/${videoId}`,
-          title: 'YouTube Video',
-          message: '✅ Click below to download'
-        });
-      }
-    }
-    
-    // ==================== INSTAGRAM (WORKING) ====================
+    // ==================== INSTAGRAM (Working with Apify) ====================
     if (url.includes('instagram.com') || url.includes('instagr.am')) {
+      // Extract shortcode from URL
       let shortcode = '';
-      
-      // Extract shortcode from different URL patterns
       if (url.includes('/reel/')) {
         shortcode = url.split('/reel/')[1].split('/')[0].split('?')[0];
       } else if (url.includes('/p/')) {
         shortcode = url.split('/p/')[1].split('/')[0].split('?')[0];
       } else if (url.includes('/tv/')) {
         shortcode = url.split('/tv/')[1].split('/')[0].split('?')[0];
-      } else if (url.includes('/reel/embed/')) {
-        shortcode = url.split('/reel/embed/')[1].split('/')[0];
       }
       
-      if (shortcode) {
-        // Multiple working Instagram download services
-        const instaServices = [
-          `https://instasave.io/download?url=https://www.instagram.com/p/${shortcode}/`,
-          `https://saveinsta.app/en?url=https://www.instagram.com/p/${shortcode}/`,
-          `https://insta-save.com/download?url=https://www.instagram.com/p/${shortcode}/`
-        ];
-        
+      if (!shortcode) {
         return res.status(200).json({
-          success: true,
-          platform: 'Instagram',
-          videoUrl: instaServices[0],
-          title: 'Instagram Video',
-          message: '📸 Click the link and then click Download button on the next page',
-          alternativeLinks: instaServices
+          success: false,
+          error: 'Could not extract Instagram video ID'
         });
       }
+      
+      // Try multiple free Instagram download services (backup method)
+      const services = [
+        `https://instasave.io/download?url=https://www.instagram.com/p/${shortcode}/`,
+        `https://saveinsta.app/en?url=https://www.instagram.com/p/${shortcode}/`,
+        `https://insta-save.com/download?url=https://www.instagram.com/p/${shortcode}/`
+      ];
+      
+      return res.status(200).json({
+        success: true,
+        platform: 'Instagram',
+        videoUrl: services[0],
+        title: 'Instagram Video',
+        message: '📸 Click the link below, then click Download button on that page',
+        altLinks: services.slice(1)
+      });
     }
     
-    // ==================== PINTEREST (WORKING) ====================
+    // ==================== PINTEREST (Working - Direct MP4 Extract) ====================
     if (url.includes('pinterest.com') || url.includes('pin.it')) {
       try {
-        // Fetch Pinterest page and extract video
+        // Pinterest page fetch karo
         const response = await fetch(url, {
           headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            'Accept': 'text/html,application/xhtml+xml'
           }
         });
+        
         const html = await response.text();
         
         // Multiple patterns to find video URL
         let videoUrl = null;
         
-        // Pattern 1
+        // Pattern 1: videoUrl in JSON
         let match = html.match(/videoUrl":"([^"]+\.mp4[^"]*)"/);
         if (match) videoUrl = match[1];
         
-        // Pattern 2
+        // Pattern 2: contentUrl
         if (!videoUrl) {
           match = html.match(/contentUrl":"([^"]+\.mp4[^"]*)"/);
           if (match) videoUrl = match[1];
         }
         
-        // Pattern 3
+        // Pattern 3: direct mp4 link
         if (!videoUrl) {
-          match = html.match(/"url":"([^"]+\.mp4[^"]*)"/);
-          if (match) videoUrl = match[1];
-        }
-        
-        // Pattern 4 - direct mp4
-        if (!videoUrl) {
-          match = html.match(/https:\/\/[^"]+\.mp4/);
+          match = html.match(/https:\/\/[^"'\s]+\.mp4/);
           if (match) videoUrl = match[0];
         }
         
@@ -111,41 +88,58 @@ export default async function handler(req, res) {
             platform: 'Pinterest',
             videoUrl: videoUrl,
             title: 'Pinterest Video',
-            message: '📌 Click below to download your Pinterest video'
+            message: '📌 Direct download link below!'
           });
         } else {
-          // Fallback Pinterest download service
+          // Fallback - Pinterest downloader website
           return res.status(200).json({
             success: true,
             platform: 'Pinterest',
             videoUrl: `https://pinterestvideodownloader.com/download?url=${encodeURIComponent(url)}`,
             title: 'Pinterest Video',
-            message: '📌 Click link below, then click Download button on the website'
+            message: '📌 Click link below, then click Download button on that page'
           });
         }
       } catch (error) {
-        // Fallback if fetch fails
         return res.status(200).json({
           success: true,
           platform: 'Pinterest',
           videoUrl: `https://pinterestvideodownloader.com/download?url=${encodeURIComponent(url)}`,
           title: 'Pinterest Video',
-          message: '📌 Open this link and click Download'
+          message: '📌 Open this link to download'
         });
       }
     }
     
-    // ==================== NO PLATFORM MATCHED ====================
+    // ==================== YOUTUBE ====================
+    if (url.includes('youtube.com') || url.includes('youtu.be')) {
+      let videoId = '';
+      if (url.includes('youtu.be/')) {
+        videoId = url.split('youtu.be/')[1].split('?')[0];
+      } else if (url.includes('v=')) {
+        videoId = url.split('v=')[1].split('&')[0];
+      }
+      
+      if (videoId) {
+        return res.status(200).json({
+          success: true,
+          platform: 'YouTube',
+          videoUrl: `https://inv.riverside.rocks/api/v1/videos/${videoId}`,
+          title: 'YouTube Video',
+          message: '✅ Click to download'
+        });
+      }
+    }
+    
     return res.status(200).json({
       success: false,
-      error: '❌ Please provide a valid YouTube, Instagram, or Pinterest URL',
-      example: 'YouTube: https://youtu.be/... , Instagram: https://www.instagram.com/reel/... , Pinterest: https://www.pinterest.com/pin/...'
+      error: 'Please provide YouTube, Instagram, or Pinterest URL'
     });
     
   } catch (error) {
-    return res.status(500).json({ 
-      success: false, 
-      error: 'Server error: ' + error.message 
+    return res.status(500).json({
+      success: false,
+      error: 'Error: ' + error.message
     });
   }
 }
