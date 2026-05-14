@@ -1,66 +1,196 @@
-export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'POST method chahiye' });
-  }
-  
-  const { url } = req.body;
-  
-  if (!url) {
-    return res.status(400).json({ error: 'URL dalo bhai' });
-  }
-  
-  // YouTube
-  if (url.includes('youtube') || url.includes('youtu.be')) {
-    let videoId = '';
-    if (url.includes('youtu.be/')) {
-      videoId = url.split('youtu.be/')[1].split('?')[0];
-    } else if (url.includes('v=')) {
-      videoId = url.split('v=')[1].split('&')[0];
-    }
-    
-    if (videoId) {
-      return res.status(200).json({
-        success: true,
-        platform: 'YouTube',
-        videoUrl: `https://inv.riverside.rocks/api/v1/videos/${videoId}`,
-        message: 'Click below to download'
-      });
-    }
-  }
-  
-  // Instagram - Direct working service
-  if (url.includes('instagram')) {
-    let shortcode = '';
-    if (url.includes('/reel/')) {
-      shortcode = url.split('/reel/')[1].split('/')[0].split('?')[0];
-    } else if (url.includes('/p/')) {
-      shortcode = url.split('/p/')[1].split('/')[0].split('?')[0];
-    }
-    
-    if (shortcode) {
-      return res.status(200).json({
-        success: true,
-        platform: 'Instagram',
-        videoUrl: `https://instasave.io/download?url=https://instagram.com/p/${shortcode}/`,
-        message: 'Link open karo, phir Download button dabao'
-      });
-    }
-  }
-  
-  // Pinterest
-  if (url.includes('pinterest')) {
-    return res.status(200).json({
-      success: true,
-      platform: 'Pinterest',
-      videoUrl: `https://pinterestvideodownloader.com/download?url=${encodeURIComponent(url)}`,
-      message: 'Link open karo, phir Download button dabao'
-    });
-  }
-  
-  return res.status(200).json({
-    success: false,
-    error: 'YouTube, Instagram, ya Pinterest link daalo'
-  });
-}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Fast Video Saver - Download YouTube, Instagram, Pinterest</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            margin: 0;
+        }
+        .box {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        h1 {
+            font-size: 28px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        .sub {
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        .badges {
+            margin-bottom: 25px;
+        }
+        .badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            margin: 0 3px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .ig { background: #E4405F; color: white; }
+        .yt { background: #FF0000; color: white; }
+        .pt { background: #BD081C; color: white; }
+        input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        button:disabled {
+            opacity: 0.6;
+        }
+        .msg {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            display: none;
+            word-break: break-all;
+        }
+        .good {
+            background: #d4edda;
+            color: #155724;
+            display: block;
+        }
+        .bad {
+            background: #f8d7da;
+            color: #721c24;
+            display: block;
+        }
+        .load {
+            background: #d1ecf1;
+            color: #0c5460;
+            display: block;
+        }
+        a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .footer {
+            margin-top: 25px;
+            font-size: 11px;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h1>🚀 Fast Video Saver</h1>
+        <p class="sub">100% Free - No Signup Required</p>
+        
+        <div class="badges">
+            <span class="badge yt">▶️ YouTube</span>
+            <span class="badge ig">📸 Instagram</span>
+            <span class="badge pt">📌 Pinterest</span>
+        </div>
+        
+        <input type="text" id="urlInput" placeholder="Paste video URL here...">
+        <button id="downloadBtn" onclick="getVideo()">Download Video</button>
+        
+        <div id="result" class="msg"></div>
+        
+        <div class="footer">
+            ⚡ Fast | 🔒 Secure | 💯 Always Free
+        </div>
+    </div>
+
+    <script>
+        async function getVideo() {
+            const urlInput = document.getElementById('urlInput');
+            const url = urlInput.value.trim();
+            const resultDiv = document.getElementById('result');
+            const downloadBtn = document.getElementById('downloadBtn');
+            
+            resultDiv.className = 'msg';
+            resultDiv.style.display = 'none';
+            
+            if (!url) {
+                resultDiv.innerHTML = '❌ Please paste a video URL';
+                resultDiv.className = 'msg bad';
+                return;
+            }
+            
+            resultDiv.innerHTML = '⏳ Processing your video...';
+            resultDiv.className = 'msg load';
+            downloadBtn.disabled = true;
+            
+            try {
+                const response = await fetch('/api/download', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ url: url })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success && data.videoUrl) {
+                    let icon = '';
+                    if (data.platform === 'YouTube') icon = '▶️';
+                    else if (data.platform === 'Instagram') icon = '📸';
+                    else if (data.platform === 'Pinterest') icon = '📌';
+                    
+                    resultDiv.innerHTML = `${icon} <strong>${data.platform}</strong> video ready!<br><br>
+                    <a href="${data.videoUrl}" target="_blank">📥 Click Here to Download</a>`;
+                    resultDiv.className = 'msg good';
+                    
+                    // Auto open in new tab
+                    setTimeout(() => {
+                        window.open(data.videoUrl, '_blank');
+                    }, 500);
+                } else {
+                    resultDiv.innerHTML = `❌ ${data.error || 'Failed to download video'}`;
+                    resultDiv.className = 'msg bad';
+                }
+                
+            } catch (error) {
+                resultDiv.innerHTML = `❌ Error: ${error.message}`;
+                resultDiv.className = 'msg bad';
+            } finally {
+                downloadBtn.disabled = false;
+            }
+        }
+        
+        // Enter key support
+        document.getElementById('urlInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                getVideo();
+            }
+        });
+    </script>
+</body>
+</html>
