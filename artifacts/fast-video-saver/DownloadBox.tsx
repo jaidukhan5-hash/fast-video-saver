@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Clipboard, Download, CheckCircle2, Film, Music, Copy } from "lucide-react";
+import { Clipboard, Download, CheckCircle2, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -37,12 +37,16 @@ export function DownloadBox() {
   const [platform, setPlatform] = useState<{ name: string; color: string; bgColor: string } | null>(null);
   const [loading, setLoading] = useState(false);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
+  const [videoSize, setVideoSize] = useState<string>("");
+  const [videoPlatform, setVideoPlatform] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
     setPlatform(detectPlatform(url));
     setDownloadUrl(null);
+    setVideoSize("");
+    setVideoPlatform("");
     setError(null);
   }, [url]);
 
@@ -72,29 +76,32 @@ export function DownloadBox() {
 
     setLoading(true);
     setDownloadUrl(null);
+    setVideoSize("");
+    setVideoPlatform("");
     setError(null);
 
     try {
-      const response = await fetch("https://api.cobalt.tools/", {
+      const response = await fetch("/api/download", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Accept": "application/json",
         },
         body: JSON.stringify({ url: url.trim() }),
       });
 
       const data = await response.json();
 
-      if (data.status === "redirect" || data.status === "stream" || data.status === "tunnel") {
-        setDownloadUrl(data.url);
-        toast({ title: "Ready!", description: "Your download link is ready." });
-      } else if (data.status === "picker") {
-        setDownloadUrl(data.picker?.[0]?.url || null);
-        toast({ title: "Ready!", description: "Click below to download." });
+      if (data.success) {
+        setDownloadUrl(data.videoUrl);
+        setVideoSize(data.size);
+        setVideoPlatform(data.platform);
+        toast({ 
+          title: "Ready!", 
+          description: `Size: ${data.size} | Platform: ${data.platform}` 
+        });
       } else {
-        setError(data.error?.code || "Could not process this URL. Try another link.");
-        toast({ title: "Error", description: "Could not process this URL.", variant: "destructive" });
+        setError(data.error);
+        toast({ title: "Error", description: data.error, variant: "destructive" });
       }
     } catch {
       setError("Network error. Please try again.");
@@ -166,8 +173,14 @@ export function DownloadBox() {
         {downloadUrl && (
           <div className="mt-4 pt-6 border-t border-white/10 animate-fade-in text-center">
             <CheckCircle2 className="h-8 w-8 text-green-500 mx-auto mb-3" />
-            <p className="text-white font-medium mb-4">Your video is ready!</p>
+            <p className="text-white font-medium mb-2">Your video is ready!</p>
             
+            {/* REAL SIZE YAHAN DIKHEGA */}
+            <p className="text-sm text-gray-400 mb-4">
+              📦 Size: {videoSize || 'Unknown'} | 🎬 {videoPlatform || 'Video'}
+            </p>
+            
+            <a
               href={downloadUrl}
               target="_blank"
               rel="noopener noreferrer"
@@ -182,4 +195,4 @@ export function DownloadBox() {
       </div>
     </div>
   );
-          }
+                             }
