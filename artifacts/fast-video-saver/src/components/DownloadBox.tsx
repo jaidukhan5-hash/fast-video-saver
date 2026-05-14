@@ -1,8 +1,5 @@
 import { useState, useEffect } from "react";
 import { Clipboard, Download, CheckCircle2, Copy } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
 import { 
   SiYoutube, SiInstagram, SiTiktok, SiX, SiFacebook, SiVimeo, SiPinterest 
 } from "react-icons/si";
@@ -40,7 +37,6 @@ export function DownloadBox() {
   const [videoSize, setVideoSize] = useState<string>("");
   const [videoPlatform, setVideoPlatform] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
-  const { toast } = useToast();
 
   useEffect(() => {
     setPlatform(detectPlatform(url));
@@ -55,22 +51,22 @@ export function DownloadBox() {
       const text = await navigator.clipboard.readText();
       setUrl(text);
     } catch {
-      toast({ title: "Failed to read clipboard", variant: "destructive" });
+      alert("Failed to read clipboard");
     }
   };
 
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(url);
-      toast({ title: "Copied!" });
+      alert("Copied!");
     } catch {
-      toast({ title: "Failed to copy", variant: "destructive" });
+      alert("Failed to copy");
     }
   };
 
   const handleDownload = async () => {
     if (!url.trim()) {
-      toast({ title: "Please enter a valid URL", variant: "destructive" });
+      alert("Please enter a valid URL");
       return;
     }
 
@@ -95,17 +91,14 @@ export function DownloadBox() {
         setDownloadUrl(data.videoUrl);
         setVideoSize(data.size);
         setVideoPlatform(data.platform);
-        toast({ 
-          title: "Ready!", 
-          description: `Size: ${data.size} | Platform: ${data.platform}` 
-        });
+        alert(`Ready! Size: ${data.size} | Platform: ${data.platform}`);
       } else {
         setError(data.error);
-        toast({ title: "Error", description: data.error, variant: "destructive" });
+        alert("Error: " + data.error);
       }
     } catch {
       setError("Network error. Please try again.");
-      toast({ title: "Error", description: "Network error.", variant: "destructive" });
+      alert("Network error. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -116,21 +109,27 @@ export function DownloadBox() {
       <div className="glass-card p-6 md:p-8 flex flex-col gap-6">
         
         <div className="relative flex items-center">
-          <Input 
+          <input 
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             placeholder="Paste video URL here..." 
-            className="h-16 pl-6 pr-32 text-lg bg-black/20 border-white/10 text-white placeholder:text-muted-foreground rounded-xl"
+            className="h-16 pl-6 pr-32 text-lg bg-black/20 border border-white/10 text-white placeholder-gray-400 rounded-xl w-full"
           />
           <div className="absolute right-2 flex items-center gap-1">
             {url && (
-              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-white h-10 w-10" onClick={handleCopy}>
+              <button 
+                className="text-gray-400 hover:text-white h-10 w-10 flex items-center justify-center"
+                onClick={handleCopy}
+              >
                 <Copy className="h-5 w-5" />
-              </Button>
+              </button>
             )}
-            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-white h-10 w-10" onClick={handlePaste}>
+            <button 
+              className="text-gray-400 hover:text-white h-10 w-10 flex items-center justify-center"
+              onClick={handlePaste}
+            >
               <Clipboard className="h-5 w-5" />
-            </Button>
+            </button>
           </div>
         </div>
         
@@ -145,24 +144,23 @@ export function DownloadBox() {
           </div>
         )}
         
-        <Button 
-          size="lg" 
-          className="h-16 text-lg font-semibold rounded-xl bg-primary hover:bg-primary/90 text-white w-full md:w-auto self-center px-12"
+        <button 
+          className="h-16 text-lg font-semibold rounded-xl bg-blue-600 hover:bg-blue-700 text-white w-full md:w-auto self-center px-12 transition-colors"
           onClick={handleDownload}
           disabled={loading}
         >
           {loading ? (
-            <span className="flex items-center gap-2">
+            <span className="flex items-center justify-center gap-2">
               <span className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></span>
               Processing...
             </span>
           ) : (
-            <span className="flex items-center gap-2">
+            <span className="flex items-center justify-center gap-2">
               <Download className="h-6 w-6" />
               Download Now
             </span>
           )}
-        </Button>
+        </button>
 
         {error && (
           <div className="text-center text-red-400 text-sm p-3 bg-red-500/10 rounded-lg">
@@ -184,7 +182,7 @@ export function DownloadBox() {
               target="_blank"
               rel="noopener noreferrer"
               download
-              className="inline-flex items-center gap-2 px-8 py-3 bg-primary hover:bg-primary/90 text-white font-semibold rounded-xl transition-colors"
+              className="inline-flex items-center gap-2 px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors"
             >
               <Download className="h-5 w-5" />
               Download Video
