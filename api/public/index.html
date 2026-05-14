@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Fast Video Saver - Download YouTube, Instagram, Pinterest</title>
+    <title>Fast Video Saver</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         body {
@@ -24,25 +24,16 @@
             box-shadow: 0 10px 40px rgba(0,0,0,0.2);
         }
         h1 {
-            font-size: 28px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin-bottom: 10px;
         }
-        .sub {
-            color: #666;
-            margin-bottom: 20px;
-            font-size: 14px;
-        }
-        .badges {
-            margin-bottom: 25px;
-        }
         .badge {
             display: inline-block;
             padding: 5px 12px;
             border-radius: 20px;
-            margin: 0 3px;
+            margin: 5px;
             font-size: 12px;
             font-weight: bold;
         }
@@ -55,7 +46,7 @@
             border: 2px solid #ddd;
             border-radius: 10px;
             font-size: 16px;
-            margin-bottom: 15px;
+            margin: 10px 0;
             box-sizing: border-box;
         }
         button {
@@ -69,128 +60,55 @@
             font-weight: bold;
             cursor: pointer;
         }
-        button:disabled {
-            opacity: 0.6;
-        }
         .msg {
             margin-top: 20px;
             padding: 15px;
             border-radius: 10px;
             display: none;
-            word-break: break-all;
         }
-        .good {
-            background: #d4edda;
-            color: #155724;
-            display: block;
-        }
-        .bad {
-            background: #f8d7da;
-            color: #721c24;
-            display: block;
-        }
-        .load {
-            background: #d1ecf1;
-            color: #0c5460;
-            display: block;
-        }
-        a {
-            color: #667eea;
-            text-decoration: none;
-            font-weight: bold;
-        }
-        .footer {
-            margin-top: 25px;
-            font-size: 11px;
-            color: #999;
-        }
+        .good { background: #d4edda; color: #155724; display: block; }
+        .bad { background: #f8d7da; color: #721c24; display: block; }
+        .load { background: #d1ecf1; color: #0c5460; display: block; }
+        a { color: #667eea; }
+        .footer { margin-top: 20px; font-size: 12px; color: #999; }
     </style>
 </head>
 <body>
     <div class="box">
         <h1>🚀 Fast Video Saver</h1>
-        <p class="sub">100% Free - No Signup Required</p>
-        
-        <div class="badges">
-            <span class="badge yt">▶️ YouTube</span>
-            <span class="badge ig">📸 Instagram</span>
-            <span class="badge pt">📌 Pinterest</span>
+        <p>100% Free - YouTube | Instagram | Pinterest</p>
+        <div>
+            <span class="badge yt">YouTube</span>
+            <span class="badge ig">Instagram</span>
+            <span class="badge pt">Pinterest</span>
         </div>
-        
-        <input type="text" id="urlInput" placeholder="Paste video URL here...">
-        <button id="downloadBtn" onclick="getVideo()">Download Video</button>
-        
-        <div id="result" class="msg"></div>
-        
-        <div class="footer">
-            ⚡ Fast | 🔒 Secure | 💯 Always Free
-        </div>
+        <input type="text" id="url" placeholder="Paste video URL...">
+        <button onclick="download()">Download Video</button>
+        <div id="msg" class="msg"></div>
+        <div class="footer">⚡ Fast | 🔒 Secure | 💯 Free</div>
     </div>
-
     <script>
-        async function getVideo() {
-            const urlInput = document.getElementById('urlInput');
-            const url = urlInput.value.trim();
-            const resultDiv = document.getElementById('result');
-            const downloadBtn = document.getElementById('downloadBtn');
-            
-            resultDiv.className = 'msg';
-            resultDiv.style.display = 'none';
-            
-            if (!url) {
-                resultDiv.innerHTML = '❌ Please paste a video URL';
-                resultDiv.className = 'msg bad';
-                return;
-            }
-            
-            resultDiv.innerHTML = '⏳ Processing your video...';
-            resultDiv.className = 'msg load';
-            downloadBtn.disabled = true;
-            
+        async function download() {
+            const url = document.getElementById('url').value;
+            const msg = document.getElementById('msg');
+            if (!url) { msg.innerHTML = '❌ Enter URL'; msg.className = 'msg bad'; return; }
+            msg.innerHTML = '⏳ Processing...'; msg.className = 'msg load';
             try {
-                const response = await fetch('/api/download', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ url: url })
+                const res = await fetch('/api/download', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url })
                 });
-                
-                const data = await response.json();
-                
-                if (data.success && data.videoUrl) {
-                    let icon = '';
-                    if (data.platform === 'YouTube') icon = '▶️';
-                    else if (data.platform === 'Instagram') icon = '📸';
-                    else if (data.platform === 'Pinterest') icon = '📌';
-                    
-                    resultDiv.innerHTML = `${icon} <strong>${data.platform}</strong> video ready!<br><br>
-                    <a href="${data.videoUrl}" target="_blank">📥 Click Here to Download</a>`;
-                    resultDiv.className = 'msg good';
-                    
-                    // Auto open in new tab
-                    setTimeout(() => {
-                        window.open(data.videoUrl, '_blank');
-                    }, 500);
+                const data = await res.json();
+                if (data.success) {
+                    msg.innerHTML = `✅ ${data.platform} ready!<br><br><a href="${data.videoUrl}" target="_blank">📥 Click to Download</a>`;
+                    msg.className = 'msg good';
+                    window.open(data.videoUrl, '_blank');
                 } else {
-                    resultDiv.innerHTML = `❌ ${data.error || 'Failed to download video'}`;
-                    resultDiv.className = 'msg bad';
+                    msg.innerHTML = `❌ ${data.error}`; msg.className = 'msg bad';
                 }
-                
-            } catch (error) {
-                resultDiv.innerHTML = `❌ Error: ${error.message}`;
-                resultDiv.className = 'msg bad';
-            } finally {
-                downloadBtn.disabled = false;
-            }
+            } catch(e) { msg.innerHTML = '❌ Error'; msg.className = 'msg bad'; }
         }
-        
-        // Enter key support
-        document.getElementById('urlInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                getVideo();
-            }
-        });
+        document.getElementById('url').addEventListener('keypress', e => e.key === 'Enter' && download());
     </script>
 </body>
 </html>
