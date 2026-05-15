@@ -3,12 +3,12 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  // OPTIONS request support
+  // Handle OPTIONS
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
-  // POST check
+  // Only POST allowed
   if (req.method !== 'POST') {
     return res.status(405).json({
       success: false,
@@ -100,7 +100,7 @@ export default async function handler(req, res) {
       });
     }
 
-    // Unsupported platform
+    // Unsupported
     return res.status(400).json({
       success: false,
       error: 'Sirf YouTube, Instagram, ya Pinterest links support hain'
