@@ -27,7 +27,6 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 10px;
         }
         .badge {
             display: inline-block;
@@ -69,7 +68,6 @@
         .good { background: #d4edda; color: #155724; display: block; }
         .bad { background: #f8d7da; color: #721c24; display: block; }
         .load { background: #d1ecf1; color: #0c5460; display: block; }
-        a { color: #667eea; }
         .footer { margin-top: 20px; font-size: 12px; color: #999; }
     </style>
 </head>
@@ -91,24 +89,43 @@
         async function download() {
             const url = document.getElementById('url').value;
             const msg = document.getElementById('msg');
-            if (!url) { msg.innerHTML = '❌ Enter URL'; msg.className = 'msg bad'; return; }
-            msg.innerHTML = '⏳ Processing...'; msg.className = 'msg load';
+            
+            if (!url) {
+                msg.innerHTML = '❌ Enter URL';
+                msg.className = 'msg bad';
+                return;
+            }
+            
+            msg.innerHTML = '⏳ Processing...';
+            msg.className = 'msg load';
+            
             try {
                 const res = await fetch('/api/download', {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ url })
                 });
+                
                 const data = await res.json();
-                if (data.success) {
-                    msg.innerHTML = `✅ ${data.platform} ready!<br><br><a href="${data.videoUrl}" target="_blank">📥 Click to Download</a>`;
+                
+                if (data.success && data.videoUrl) {
+                    msg.innerHTML = `✅ ${data.platform} ready! Downloading...`;
                     msg.className = 'msg good';
-                    window.open(data.videoUrl, '_blank');
+                    // Direct download - no extra button
+                    window.location.href = data.videoUrl;
                 } else {
-                    msg.innerHTML = `❌ ${data.error}`; msg.className = 'msg bad';
+                    msg.innerHTML = `❌ ${data.error || 'Failed'}`;
+                    msg.className = 'msg bad';
                 }
-            } catch(e) { msg.innerHTML = '❌ Error'; msg.className = 'msg bad'; }
+            } catch(e) {
+                msg.innerHTML = '❌ Error';
+                msg.className = 'msg bad';
+            }
         }
-        document.getElementById('url').addEventListener('keypress', e => e.key === 'Enter' && download());
+        
+        document.getElementById('url').addEventListener('keypress', e => {
+            if (e.key === 'Enter') download();
+        });
     </script>
 </body>
 </html>
