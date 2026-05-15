@@ -2,130 +2,44 @@
 <html>
 <head>
     <title>Fast Video Saver</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-            margin: 0;
-        }
-        .box {
-            background: white;
-            border-radius: 20px;
-            padding: 40px;
-            max-width: 500px;
-            width: 100%;
-            text-align: center;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-        }
-        h1 {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        .badge {
-            display: inline-block;
-            padding: 5px 12px;
-            border-radius: 20px;
-            margin: 5px;
-            font-size: 12px;
-            font-weight: bold;
-        }
-        .ig { background: #E4405F; color: white; }
-        .yt { background: #FF0000; color: white; }
-        .pt { background: #BD081C; color: white; }
-        input {
-            width: 100%;
-            padding: 15px;
-            border: 2px solid #ddd;
-            border-radius: 10px;
-            font-size: 16px;
-            margin: 10px 0;
-            box-sizing: border-box;
-        }
-        button {
-            width: 100%;
-            padding: 15px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        .msg {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 10px;
-            display: none;
-        }
-        .good { background: #d4edda; color: #155724; display: block; }
-        .bad { background: #f8d7da; color: #721c24; display: block; }
-        .load { background: #d1ecf1; color: #0c5460; display: block; }
-        .footer { margin-top: 20px; font-size: 12px; color: #999; }
+        body{font-family:Arial;background:linear-gradient(135deg,#667eea,#764ba2);min-height:100vh;display:flex;justify-content:center;align-items:center;padding:20px}
+        .box{background:white;border-radius:20px;padding:40px;max-width:500px;width:100%;text-align:center}
+        input,button{width:100%;padding:15px;margin:10px 0;border-radius:10px;font-size:16px}
+        button{background:linear-gradient(135deg,#667eea,#764ba2);color:white;border:none;cursor:pointer}
+        .msg{margin-top:20px;padding:15px;border-radius:10px;display:none}
+        .good{background:#d4edda;color:#155724;display:block}
+        .bad{background:#f8d7da;color:#721c24;display:block}
+        .load{background:#d1ecf1;color:#0c5460;display:block}
     </style>
 </head>
 <body>
     <div class="box">
         <h1>🚀 Fast Video Saver</h1>
-        <p>100% Free - YouTube | Instagram | Pinterest</p>
-        <div>
-            <span class="badge yt">YouTube</span>
-            <span class="badge ig">Instagram</span>
-            <span class="badge pt">Pinterest</span>
-        </div>
+        <p>YouTube | Instagram | Pinterest</p>
         <input type="text" id="url" placeholder="Paste video URL...">
         <button onclick="download()">Download Video</button>
         <div id="msg" class="msg"></div>
-        <div class="footer">⚡ Fast | 🔒 Secure | 💯 Free</div>
     </div>
     <script>
-        async function download() {
-            const url = document.getElementById('url').value;
-            const msg = document.getElementById('msg');
-            
-            if (!url) {
-                msg.innerHTML = '❌ Enter URL';
-                msg.className = 'msg bad';
-                return;
-            }
-            
-            msg.innerHTML = '⏳ Processing...';
-            msg.className = 'msg load';
-            
-            try {
-                const res = await fetch('/api/download', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ url })
-                });
-                
-                const data = await res.json();
-                
-                if (data.success && data.videoUrl) {
-                    msg.innerHTML = `✅ ${data.platform} ready! Downloading...`;
-                    msg.className = 'msg good';
-                    // Direct download - no extra button
-                    window.location.href = data.videoUrl;
-                } else {
-                    msg.innerHTML = `❌ ${data.error || 'Failed'}`;
-                    msg.className = 'msg bad';
+        async function download(){
+            const url=document.getElementById('url').value;
+            const msg=document.getElementById('msg');
+            if(!url){msg.innerHTML='❌ Enter URL';msg.className='msg bad';return;}
+            msg.innerHTML='⏳ Processing...';msg.className='msg load';
+            try{
+                const res=await fetch('/api/download',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url})});
+                const data=await res.json();
+                if(data.success){
+                    msg.innerHTML=`✅ ${data.platform} ready! Downloading...`;
+                    msg.className='msg good';
+                    window.open(data.videoUrl,'_blank');
+                }else{
+                    msg.innerHTML=`❌ ${data.error}`;
+                    msg.className='msg bad';
                 }
-            } catch(e) {
-                msg.innerHTML = '❌ Error';
-                msg.className = 'msg bad';
-            }
+            }catch(e){msg.innerHTML='❌ Error';msg.className='msg bad';}
         }
-        
-        document.getElementById('url').addEventListener('keypress', e => {
-            if (e.key === 'Enter') download();
-        });
     </script>
 </body>
-</html> 
+</html>
